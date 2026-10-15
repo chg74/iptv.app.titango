@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>TITANGO TV</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e17;--card:#1a2235;--card2:#222d44;--line:#2a3654;--acc:#00d4ff;--acc2:#7c3aed;--txt:#e9eefb;--mut:#8b9ab5;--ok:#22c55e;--bad:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+.screen{display:none}.screen.active{display:block}
+#loginScreen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50;background:radial-gradient(ellipse at 50% 0%,#1a2a4a 0%,var(--bg) 70%)}
+#loginScreen.active{display:flex}
+.lbox{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:40px 28px;width:min(92vw,400px);text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.8)}
+.lbox img{width:170px;margin-bottom:12px;filter:drop-shadow(0 0 25px rgba(0,212,255,.6))}
+.brand{font-size:11px;letter-spacing:8px;color:var(--acc);font-weight:700;margin-bottom:22px}
+.lbox h1{font-size:20px;margin-bottom:8px}.lbox p{color:var(--mut);font-size:13px;margin-bottom:24px}
+input{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:14px 16px;border-radius:14px;font-size:15px;outline:none;font-family:'Cairo',sans-serif}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+label{display:block;text-align:right;font-size:12px;color:var(--mut);margin:14px 0 6px;font-weight:600}
+.btn{width:100%;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;padding:15px;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;font-family:'Cairo',sans-serif}
+.btn:active{transform:scale(.97)}
+.err{color:var(--bad);font-size:13px;margin-top:14px;min-height:20px;font-weight:600}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(17,24,39,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.hleft{display:flex;align-items:center;gap:12px}
+.hleft img{width:46px;filter:drop-shadow(0 0 10px rgba(0,212,255,.5))}
+.usr-info h2{font-size:14px;margin-bottom:4px}
+.usr-info small{color:var(--mut);font-size:11px;display:flex;align-items:center;gap:6px}
+.exp-badge{background:rgba(0,212,255,.1);color:var(--acc);padding:2px 10px;border-radius:20px;font-size:10px;border:1px solid rgba(0,212,255,.3);font-weight:700}
+.logout{background:transparent;border:1px solid var(--line);color:var(--txt);padding:8px 14px;border-radius:12px;font-size:12px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:16px 12px 100px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--card);padding:5px;border-radius:16px;border:1px solid var(--line)}
+.tab{flex:1;text-align:center;padding:12px 6px;border-radius:12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--mut);white-space:nowrap}
+.tab.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 6px 20px rgba(0,212,255,.3)}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.cat{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;cursor:pointer;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;padding:14px 10px;text-align:center;font-size:13px;font-weight:700;overflow:hidden;position:relative;transition:.25s}
+.cat:hover{border-color:var(--acc);transform:translateY(-4px)}
+.cat span{position:relative;z-index:1;display:block;line-height:1.4;word-break:break-word}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;transition:.25s;position:relative;aspect-ratio:1/1;display:flex;flex-direction:column}
+.item:hover{transform:translateY(-4px);border-color:var(--acc)}
+.item img{width:100%;flex:1;min-height:0;object-fit:cover;background:#0b1120;display:block}
+.item .t{padding:8px 6px;font-size:11px;text-align:center;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.3);flex-shrink:0}
+.item .t.no-img{flex:1;padding:10px;background:linear-gradient(135deg,var(--card2),#0b1120);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;text-align:center;white-space:normal;line-height:1.4}
+.item .play-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;pointer-events:none;transition:.2s;opacity:0}
+.item:hover .play-overlay{opacity:1;background:var(--acc);border-color:var(--acc)}
+.item .play-overlay svg{width:18px;height:18px;fill:#fff}
+.item .dl-btn{position:absolute;top:6px;left:6px;background:rgba(34,197,94,.9);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:5}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column;padding:12px}
+.modal.show{display:flex}
+.modal .title{color:#fff;font-size:16px;margin-bottom:14px;text-align:center;font-weight:700;padding:0 50px}
+.modal .close{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.12);border:none;color:#fff;width:42px;height:42px;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal .info{color:var(--mut);font-size:13px;margin-bottom:18px;text-align:center;line-height:1.8}
+.modal .player-actions{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px}
+.modal .p-btn{width:100%;padding:16px;border-radius:14px;border:none;color:#fff;font-weight:700;font-size:15px;cursor:pointer;font-family:'Cairo',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px}
+.modal .p-arix{background:linear-gradient(135deg,#7c3aed,#5b21b6)}
+.modal .p-dl{background:linear-gradient(135deg,#22c55e,#15803d)}
+#internalPlayer{position:fixed;inset:0;background:#000;z-index:150;display:none;flex-direction:column}
+#internalPlayer.show{display:flex}
+#internalPlayer video{width:100%;flex:1;background:#000}
+#internalPlayer .back-btn{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.12);border:none;color:#fff;width:42px;height:42px;border-radius:50%;font-size:22px;cursor:pointer;z-index:2}
+#internalPlayer .warn{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,.9);color:#fff;padding:10px 18px;border-radius:12px;font-size:12px;text-align:center;max-width:90%;display:none}
+#internalPlayer .warn.show{display:block}
+.episodes{width:100%;max-width:800px;max-height:24vh;overflow-y:auto;margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 10px}
+.ep{background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:9px 16px;border-radius:10px;font-size:12px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:600}
+.ep:hover{background:var(--acc);border-color:var(--acc)}
+.loader{text-align:center;padding:50px;color:var(--mut);font-size:14px}
+.spin{display:inline-block;width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite;margin-bottom:12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px 20px;color:var(--mut);line-height:2;font-size:14px}
+.back{margin-bottom:14px}
+.back button{background:var(--card);border:1px solid var(--line);color:var(--txt);padding:9px 18px;border-radius:12px;font-size:13px;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:600}
+.retry-btn{background:linear-gradient(135deg,#f59e0b,#b45309);border:none;color:#fff;padding:12px 26px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px;font-family:'Cairo',sans-serif}
+.tg-btn{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,#0088cc,#006699);color:#fff;padding:15px;text-align:center;font-weight:700;font-size:14px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 -6px 25px rgba(0,136,204,.5);z-index:30;font-family:'Cairo',sans-serif}
+.expired-box{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,#2b0d0d,var(--bg));z-index:200;display:none;align-items:center;justify-content:center;text-align:center;padding:20px}
+.expired-box.show{display:flex}
+.expired-box .in{background:var(--card);border:1px solid rgba(239,68,68,.4);border-radius:28px;padding:40px 28px;max-width:400px}
+.expired-box h2{color:#f87171;font-size:24px;margin-bottom:14px}
+.expired-box p{color:var(--mut);font-size:14px;line-height:1.9;margin-bottom:20px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--acc);color:var(--txt);padding:13px 24px;border-radius:14px;font-size:13px;opacity:0;transition:.4s;z-index:300;text-align:center;max-width:92vw;font-weight:600}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+  <div class="lbox">
+    <img src="https://i.postimg.cc/QMvQr9Z6/TITANGO-TV.png" alt="TITANGO TV">
+    <div class="brand">NOVA CELL</div>
+    <h1>مرحباً بك 👋</h1>
+    <p>ادخل بيانات الاشتراك للمتابعة</p>
+    <label>اسم المستخدم</label>
+    <input id="u_user" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
+    <label>كلمة المرور</label>
+    <input type="password" id="u_pass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" onclick="doLogin()">🚀 دخول</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="mainScreen" class="screen">
+  <header>
+    <div class="hleft">
+      <img src="https://i.postimg.cc/QMvQr9Z6/TITANGO-TV.png" alt="logo">
+      <div class="usr-info">
+        <h2 id="dispName">—</h2>
+        <small><span class="exp-badge" id="dispExp">—</span></small>
+      </div>
+    </div>
+    <button class="logout" onclick="logout()">خروج</button>
+  </header>
+  <main>
+    <div class="tabs">
+      <div class="tab active" data-tab="live" onclick="switchTab('live',this)">📺 مباشر</div>
+      <div class="tab" data-tab="movie" onclick="switchTab('movie',this)">🎬 أفلام</div>
+      <div class="tab" data-tab="series" onclick="switchTab('series',this)">📼 مسلسلات</div>
+    </div>
+    <div id="content"><div class="loader"><div class="spin"></div><div>جاري التحميل...</div></div></div>
+  </main>
+</div>
+
+<div class="modal" id="playerModal">
+  <button class="close" onclick="closePlayer()">✕</button>
+  <div class="title" id="playerTitle"></div>
+  <div class="info" id="playerInfo"></div>
+  <div class="player-actions">
+    <button class="p-btn p-arix" onclick="openArix()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+      تشغيل الآن
+    </button>
+    <button class="p-btn p-dl" onclick="downloadFile()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      تحميل
+    </button>
+  </div>
+  <div class="episodes" id="episodeList"></div>
+</div>
+
+<div id="internalPlayer">
+  <button class="back-btn" onclick="closeInternalPlayer()">✕</button>
+  <video id="videoEl" controls autoplay playsinline></video>
+  <div class="warn" id="internalWarn"></div>
+</div>
+
+<div class="expired-box" id="expiredBox">
+  <div class="in">
+    <img src="https://i.postimg.cc/QMvQr9Z6/TITANGO-TV.png" style="width:130px;margin-bottom:16px">
+    <h2>⛔ انتهى الاشتراك</h2>
+    <p>لقد انتهى ميعاد اشتراكك.<br>يرجى التواصل مع الإدارة للتجديد.</p>
+    <a href="https://t.me/titango_tv" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#0088cc,#006699);color:#fff;padding:13px 26px;border-radius:14px;text-decoration:none;font-weight:700;font-size:14px">📩 تواصل على تليجرام</a>
+  </div>
+</div>
+
+<a href="https://t.me/titango_tv" target="_blank" class="tg-btn">📢 قناتنا على تليجرام — TITANGO TV</a>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAUc2C9hG9VE7RECiW19QXjNZqVH96sFE",
+  authDomain: "zezo-59a8d.firebaseapp.com",
+  databaseURL: "https://zezo-59a8d-default-rtdb.firebaseio.com",
+  projectId: "zezo-59a8d",
+  storageBucket: "zezo-59a8d.firebasestorage.app",
+  messagingSenderId: "49183098248",
+  appId: "1:49183098248:web:37e3fb16744042a1bb263d"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+let currentSub=null, currentTab='live', catsCache={live:[],movie:[],series:[]},
+    streamsCache={}, hlsPlayer=null, expiryTimer=null;
+let pendingPlay = {url:'', title:'', eps:[], seriesName:''};
+
+/* ============================================
+   ⚡ Proxies بالتوازي — أول واحد ينجح يظهر فوراً
+   ============================================ */
+const PROXIES = [
+  u=>u,
+  u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),
+  u=>'https://corsproxy.io/?url='+encodeURIComponent(u),
+  u=>'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+  u=>'https://thingproxy.freeboard.io/fetch/'+u,
+  u=>'https://cors.eu.org/'+u,
+  u=>'https://whateverorigin.org/get?url='+encodeURIComponent(u),
+  u=>'https://cors-anywhere.herokuapp.com/'+u
+];
+
+async function tryFetch(url){
+  // كلهم بالتوازي — أول واحد ينجح، الباقي يتلغي
+  const promises = PROXIES.map(async p => {
+    const ctrl = new AbortController();
+    const tm = setTimeout(()=>ctrl.abort(), 5000);
+    try{
+      const r = await fetch(p(url), {signal: ctrl.signal});
+      clearTimeout(tm);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const txt = await r.text();
+      const trimmed = txt.trim();
+      if(!trimmed.startsWith('{') && !trimmed.startsWith('[')) throw new Error('not json');
+      return JSON.parse(trimmed);
+    }catch(e){
+      clearTimeout(tm);
+      throw e;
+    }
+  });
+  // أول واحد ينجح
+  return await Promise.any(promises);
+}
+
+async function apiFetch(path){
+  const raw = currentSub.host.replace(/\/+$/,'');
+  const hosts = [raw];
+  if(raw.startsWith('http://')) hosts.push(raw.replace('http://','https://'));
+  // نجرب كل الهوستات بالتوازي كمان
+  const promises = hosts.map(h => tryFetch(h + path));
+  return await Promise.any(promises);
+}
+function apiPath(extra){
+  return `/player_api.php?username=${encodeURIComponent(currentSub.iptvUser)}&password=${encodeURIComponent(currentSub.iptvPass)}${extra}`;
+}
+
+/* ============================================
+   💾 كاش — القنوات تظهر لحظياً في المرة الثانية
+   ============================================ */
+function cKey(type){ return 'tgtv_v2_' + currentSub.username + '_' + type; }
+function getCache(type){
+  try{
+    const raw = localStorage.getItem(cKey(type));
+    if(!raw) return null;
+    const {t, d} = JSON.parse(raw);
+    // الكاش صالح لمدة 12 ساعة
+    if(Date.now() - t > 12*60*60*1000) return null;
+    return d;
+  }catch(e){ return null; }
+}
+function setCache(type, data){
+  try{ localStorage.setItem(cKey(type), JSON.stringify({t: Date.now(), d: data})); }catch(e){}
+}
+
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.classList.add('show');
+  clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ====== LOGIN ====== */
+window.doLogin = async () => {
+  const u=document.getElementById('u_user').value.trim();
+  const p=document.getElementById('u_pass').value.trim();
+  const err=document.getElementById('loginErr');
+  if(!u||!p){err.textContent='ادخل المستخدم والباسورد';return;}
+  err.style.color='var(--mut)';err.textContent='⏳ جاري التحقق...';
+  try{
+    const snap = await get(ref(db,'subscriptions'));
+    const all = snap.val()||{};
+    const found = Object.entries(all).find(([k,v])=>v.username===u && v.password===p);
+    if(!found){err.style.color='var(--bad)';err.textContent='❌ بيانات الدخول غير صحيحة';return;}
+    const sub = found[1];
+    const expTime = sub.expiry ? new Date(sub.expiry+'T23:59:59').getTime() : 0;
+    if(!expTime || expTime < Date.now()){
+      err.style.color='var(--bad)';err.textContent='⛔ انتهى الاشتراك';return;
+    }
+    currentSub = sub;
+    sessionStorage.setItem('tgtv_user', JSON.stringify({u,p}));
+    startApp();
+  }catch(e){
+    err.style.color='var(--bad)';err.textContent='خطأ: '+e.message;
+  }
+};
+window.logout = () => { sessionStorage.removeItem('tgtv_user'); location.reload(); };
+
+const saved = sessionStorage.getItem('tgtv_user');
+if(saved){
+  try{
+    const {u,p} = JSON.parse(saved);
+    document.getElementById('u_user').value=u;
+    document.getElementById('u_pass').value=p;
+    doLogin();
+  }catch(e){}
+}
+
+/* ====== START ====== */
+async function startApp(){
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('mainScreen').classList.add('active');
+  document.getElementById('dispName').textContent = currentSub.name;
+  document.getElementById('dispExp').textContent = '📅 ' + currentSub.expiry;
+  const expTime = new Date(currentSub.expiry+'T23:59:59').getTime();
+  clearInterval(expiryTimer);
+  expiryTimer = setInterval(()=>{
+    if(Date.now() > expTime){
+      document.getElementById('expiredBox').classList.add('show');
+      setTimeout(()=>logout(), 5000);
+    }
+  }, 30000);
+  await loadCategories('live');
+}
+
+window.switchTab = (tab, el) => {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentTab = tab;
+  loadCategories(tab);
+};
+
+function setContent(html){document.getElementById('content').innerHTML = html;}
+
+/* ====== CATEGORIES ====== */
+async function loadCategories(type){
+  // ✅ 1. لو في cache → اعرض فوراً
+  if(!catsCache[type].length){
+    const cached = getCache('cats_'+type);
+    if(cached && cached.length){
+      catsCache[type] = cached;
+      renderCats(cached);
+    } else {
+      setContent('<div class="loader"><div class="spin"></div><div>جاري التحميل...</div></div>');
+    }
+  } else {
+    renderCats(catsCache[type]);
+    return;
+  }
+
+  // ✅ 2. جدد في الخلفية
+  const action = type==='live'?'get_live_categories':type==='movie'?'get_vod_categories':'get_series_categories';
+  try{
+    const data = await apiFetch(apiPath('&action='+action));
+    const arr = Array.isArray(data) ? data : [];
+    if(arr.length){
+      catsCache[type] = arr;
+      setCache('cats_'+type, arr);
+      // حدّث العرض لو المستخدم لسه في نفس التاب
+      if(currentTab === type) renderCats(arr);
+    }
+  }catch(e){
+    // لو مفيش cache و فشل → رسالة خطأ
+    if(!catsCache[type].length){
+      setContent(`<div class="empty">
+        ⚠️ تعذّر الاتصال بسيرفر IPTV<br>
+        <small style="font-size:12px">${escapeHtml(e.message)}</small><br>
+        <button class="retry-btn" onclick="clearAndReload()">🔄 إعادة المحاولة</button>
+      </div>`);
+    }
+  }
+}
+
+window.clearAndReload = () => {
+  Object.keys(localStorage).forEach(k=>{ if(k.startsWith('tgtv_v2_')) localStorage.removeItem(k); });
+  location.reload();
+};
+
+function renderCats(cats){
+  if(!cats.length){setContent('<div class="empty">لا يوجد محتوى</div>');return;}
+  setContent('<div class="cats">'+cats.map(c=>
+    `<div class="cat" onclick="openCat('${c.category_id}','${escAttr(c.category_name)}')"><span>${escHtml(c.category_name)}</span></div>`
+  ).join('')+'</div>');
+}
+
+/* ====== ITEMS ====== */
+window.openCat = async (catId, catName) => {
+  const cacheKey = 'streams_'+currentTab+'_'+catId;
+  const cached = streamsCache[catId] || getCache(cacheKey);
+
+  if(cached && cached.length){
+    streamsCache[catId] = cached;
+    renderItems(cached, catName);
+  } else {
+    setContent('<div class="loader"><div class="spin"></div><div>جاري التحميل...</div></div>');
+  }
+
+  const action = currentTab==='live'?'get_live_streams':currentTab==='movie'?'get_vod_streams':'get_series';
+  try{
+    const data = await apiFetch(apiPath(`&action=${action}&category_id=${catId}`));
+    const arr = Array.isArray(data) ? data : [];
+    if(arr.length){
+      streamsCache[catId] = arr;
+      setCache(cacheKey, arr);
+      renderItems(arr, catName);
+    }
+  }catch(e){
+    if(!streamsCache[catId]?.length){
+      setContent(`<div class="back"><button onclick="backToCats()">← رجوع</button></div>
+      <div class="empty">⚠️ ${escapeHtml(e.message)}</div>`);
+    }
+  }
+};
+
+function renderItems(items, catName){
+  let html = `<div class="back"><button onclick="backToCats()">← رجوع</button></div>`;
+  if(!items.length){ html += '<div class="empty">لا يوجد محتوى</div>'; setContent(html); return; }
+  html += '<div class="items">' + items.map(it=>{
+    const name = it.name || it.title || '—';
+    const img = it.stream_icon || it.cover || '';
+    const id = it.stream_id || it.series_id;
+    const imgHtml = img
+      ? `<img src="${escAttr(img)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="t no-img" style="display:none">${escHtml(name)}</div>`
+      : `<div class="t no-img">${escHtml(name)}</div>`;
+    return `<div class="item">
+      <button class="dl-btn" onclick="event.stopPropagation();directDownload('${id}','${escAttr(name)}')">⬇</button>
+      <div onclick="openItem('${id}','${escAttr(name)}','${escAttr(catName)}')" style="position:relative;flex:1;display:flex;flex-direction:column">
+        ${imgHtml}
+        <div class="play-overlay"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="t">${escHtml(name)}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+  setContent(html);
+}
+
+window.backToCats = () => { renderCats(catsCache[currentTab]); };
+
+function buildStreamUrl(id, kind, ext){
+  const host = currentSub.host.replace(/\/+$/,'');
+  return `${host}/${kind}/${currentSub.iptvUser}/${currentSub.iptvPass}/${id}.${ext}`;
+}
+
+window.openItem = async (id, name, catName) => {
+  if(currentTab === 'series'){
+    setContent('<div class="loader"><div class="spin"></div><div>جاري التحميل...</div></div>');
+    try{
+      const info = await apiFetch(apiPath(`&action=get_series_info&series_id=${id}`));
+      const eps = info.episodes || {};
+      const allEps = [];
+      Object.keys(eps).sort().forEach(se => eps[se].forEach(ep => allEps.push(ep)));
+      if(!allEps.length){toast('لا توجد حلقات');backToCats();return;}
+      const first = allEps[0];
+      const url = buildStreamUrl(first.id, 'series', first.container_extension||'mp4');
+      backToCats();
+      showPlayerModal(url, `${name} — ${first.title||'حلقة 1'}`, allEps, name);
+    }catch(e){toast('خطأ: '+e.message);backToCats();}
+    return;
+  }
+  const ext = currentTab==='live' ? 'm3u8' : 'mp4';
+  const seg = currentTab==='live' ? 'live' : 'movie';
+  const url = buildStreamUrl(id, seg, ext);
+  showPlayerModal(url, name);
+};
+
+window.directDownload = (id, name) => {
+  if(currentTab === 'series'){ toast('افتح المسلسل واختار الحلقة'); return; }
+  const ext = currentTab==='live' ? 'm3u8' : 'mp4';
+  const seg = currentTab==='live' ? 'live' : 'movie';
+  const url = buildStreamUrl(id, seg, ext);
+  triggerDownload(url, name, ext);
+};
+
+function triggerDownload(url, name, ext){
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name.replace(/[^\w\s-]/g,'').trim() + '.' + ext;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>a.remove(), 1000);
+  toast('📥 جاري التحميل...');
+}
+
+function showPlayerModal(url, title, eps, seriesName){
+  pendingPlay = {url, title, eps: eps||[], seriesName: seriesName||''};
+  document.getElementById('playerTitle').textContent = title;
+  document.getElementById('playerInfo').textContent = 'اختر طريقة التشغيل';
+  const epList = document.getElementById('episodeList');
+  epList.innerHTML = '';
+  if(eps && eps.length){
+    epList.innerHTML = eps.map((ep,i)=>{
+      const u = buildStreamUrl(ep.id, 'series', ep.container_extension||'mp4');
+      const t = ep.title || `حلقة ${i+1}`;
+      return `<button class="ep" onclick="playEpisode('${escAttr(u)}','${escAttr(seriesName+' — '+t)}')">${escHtml(t)}</button>`;
+    }).join('');
+  }
+  document.getElementById('playerModal').classList.add('show');
+}
+
+window.playEpisode = (url, title) => {
+  pendingPlay = {url, title, eps:[], seriesName:''};
+  document.getElementById('playerTitle').textContent = title;
+  document.getElementById('episodeList').innerHTML = '';
+};
+
+window.closePlayer = () => {
+  document.getElementById('playerModal').classList.remove('show');
+  pendingPlay = {url:'', title:'', eps:[], seriesName:''};
+};
+
+window.openArix = () => {
+  const {url, title} = pendingPlay;
+  if(!url) return;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  if(!isAndroid){
+    toast('⚠️ التطبيق بيشتغل على أندرويد فقط');
+    return;
+  }
+  const encodedUrl = url.replace(/#/g, '%23').replace(/ /g, '%20');
+  const encodedTitle = encodeURIComponent(title);
+  const intents = [
+    `intent://${encodedUrl.replace(/^https?:\/\//,'')}#Intent;scheme=${url.startsWith('https')?'https':'http'};package=com.arix.player;S.title=${encodedTitle};end`,
+    `intent:${encodedUrl}#Intent;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=com.arix.player;S.title=${encodedTitle};type=video/*;end`
+  ];
+  let idx = 0;
+  const tryNext = () => {
+    if(idx >= intents.length){
+      window.open('https://play.google.com/store/apps/details?id=com.arix.player', '_blank');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = intents[idx];
+    link.style.display = 'none';
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(()=>link.remove(), 500);
+    idx++;
+    setTimeout(()=>{
+      if(!document.hidden && document.visibilityState === 'visible'){ tryNext(); }
+    }, 800);
+  };
+  tryNext();
+  toast('📱 جاري فتح التطبيق...');
+};
+
+window.downloadFile = () => {
+  const {url, title} = pendingPlay;
+  if(!url) return;
+  const ext = url.includes('.m3u8') ? 'm3u8' : url.includes('.mp4') ? 'mp4' : 'ts';
+  triggerDownload(url, title, ext);
+};
+
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escHtml(s){return String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function escAttr(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body>
+</html>
